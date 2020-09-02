@@ -2,9 +2,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import Dense,Activation,Flatten
-#from sklearn.preprocessing import MinMAxScaler
+from keras.layers import Dense, Conv1D ,Flatten
+
+from sklearn.model_selection import train_test_split
+# from sklearn.preprocessing import MinMAxScaler
 # Lectrua de datos
 data = pd.read_excel("reporte.xlsx")
 
@@ -54,11 +57,47 @@ if plot == True:
 Pasos = 7
 x_train = []; y_train=[]
 len_data = len(data_c)
-for i in range(0,len(data_c)-pasos+1):
+for i in range(0,len(data_c)-Pasos-1):
 	x_train.append(data_c[i:i+7])
 	y_train.append(data_c[i+8])
 
 x_train = np.array(x_train); y_train = np.array(y_train)
+
+# forma para poder enviarlo a la red neuronal
+#x_train = x_train.reshape(-1,1)
+#y_train = y_train.reshape(-1,1)
+
+# separacion entre conjuntos de entrenamiento y validacion
+X_train, X_test, Y_train, Y_test = train_test_split(x_train,
+						    y_train,
+						    test_size=0.2)
+
+
+X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
+
+
+model = Sequential()
+model.add(Conv1D(Pasos, (2),
+	  input_shape=(X_train.shape[1], 1), activation="elu"))
+model.add(Dense(512, input_shape=(Pasos,1), activation="tanh"))
+model.add(Flatten())
+model.add(Dense(256, activation="elu"))
+model.add(Dense(128, activation="tanh"))
+model.add(Dense(1, activation="tanh"))
+
+model.compile(loss=tf.keras.losses.MeanAbsolutePercentageError(),
+	      optimizer="Adam",
+	      metrics=[tf.keras.metrics.Accuracy()])
+
+epochs = 40
+model = model.fit(X_train, Y_train, epochs=epochs, verbose=1,
+		  validation_data=(X_test, Y_test))
+
+
+
+
+
 
 
 
