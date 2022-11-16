@@ -1,0 +1,13 @@
+# Byte-compiled / optimized /DLL Files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff
+db.sqlite3
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+.DS_Store
+*.DS_Store
