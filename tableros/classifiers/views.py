@@ -27,11 +27,11 @@ def train(review, y):
 def classify_review(request):
     form = SentimentForm(request.POST or None)
     if form.is_valid():
-        reviews   = form.cleaned_data("reviews")
-        gender    = form.cleaned_data("gender")
-        age       = form.cleaned_data("age")
-        country   = form.cleaned_data("country")
-        movie     = form.cleaned_data("movie")
+        reviews   = form.cleaned_data.get("reviews")
+        gender    = form.cleaned_data.get("gender")
+        age       = form.cleaned_data.get("age")
+        country   = form.cleaned_data.get("country")
+        movie     = form.cleaned_data.get("movie")
         my_result, my_proba = classify(reviews)
         
         context = {
@@ -43,7 +43,9 @@ def classify_review(request):
             "country":country,
             "movie":movie
         }
-        return redner(request, "classifiers/movie_classify.html", context)
+        return render(request, "classifiers/prediction.html", context)
+    context = {"form":form}
+    return render(request, "classifiers/movie_classify.html", context)
     
 def feedback(request):
     feedback   = request.POST["feedback_button"]
@@ -59,17 +61,17 @@ def feedback(request):
     
     if feedback == "Incorrect":
         y = int(not(y))
-        train(review, y)
-        my_movie = Movie.objects.filter(title=movie).first()
-        sentiment = Sentiment(
-            reviews=review, 
-            result=y,
-            gender=gender,
-            age=age,
-            country=country,
-            movie=my_movie)
-        sentiment.save()
-        context = {}
-        return render(request, "classifiers/thanks.html", context)
+    train(review, y)
+    my_movie = Movie.objects.filter(title=movie).first()
+    sentiment = Sentiment(
+        reviews=review, 
+        result=y,
+        gender=gender,
+        age=age,
+        country=country,
+        movie=my_movie)
+    sentiment.save()
+    context = {}
+    return render(request, "classifiers/thanks.html", context)
 
         
