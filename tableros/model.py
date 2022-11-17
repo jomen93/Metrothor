@@ -1,6 +1,5 @@
 import os
 import time 
-import pandas as pd
 import numpy as np 
 import re
 
@@ -19,16 +18,15 @@ import pickle
 def tokenizer(text):
     """Use the regular expresipn to remove HTML and clean the text data
     and join with the emoticons. Remove stop-words and tokenize the text."""
-    
-    text      = re.sub('<[^>]>', '', text)
-    emoticons = re.findall('(?::|;|=)(?:-)?(?:\)|(|D|P)', text.lower())
-    text      = re.sub("[\W]+", " ", text.lower)+" ".join(emoticons).replace("-",  "")
-    return [w for w in text.split() if w not in stop]
+    text = re.sub('<[^>]*>', '', text)
+    emoticons = re.findall('(?::|;|=)(?:-)?(?:\)|\(|D|P)',text.lower())
+    text = re.sub('[\W]+', ' ', text.lower()) + ' '.join(emoticons).replace('-', '')
+    tokenized = [w for w in text.split() if w not in stop]
+    return tokenized
 
 def stream_docs(path):
     """Generator function to read opinion and label in one line at once"""
-    with open(path, "r", encoding="utf-8") as csv:
-        # 
+    with open(path, 'r', encoding='utf-8') as csv:
         next(csv)
         for line in csv:
             text, label = line[:-3], int(line[-2])
@@ -63,4 +61,34 @@ doc_stream = stream_docs(path="movie_data.csv")
 pbar = pyprind.ProgBar(45)
 classes = np.array([0,1])
 
+print("Training the model ...")
+for _ in range(45):
+    X_train, y_train = get_minibatch(doc_stream, size=1000)
+    if not X_train:
+        break
+    X_train = vec.transform(X_train)
+    clf.partial_fit(X_train, y_train, classes=classes)
+    pbar.update()
+    
+# Test the model output on the 5000 movies review
+X_test, y_test = get_minibatch(doc_stream, size=5000)
+X_test = vec.transform(X_test)
 
+# Print results
+print(f"Accuracy = {clf.score(X_test, y_test):.3f}")
+
+clf = clf.partial_fit(X_test, y_test)
+print("...trained!")
+
+path_dest = "pkl_objects"
+if not os.path.exists(path_dest):
+    print("Creating directory for save pickling")
+    os.makedirs(path_dest)
+
+pickle.dump(stop,
+    open(os.path.join(path_dest, "stopwords.pkl"),"wb"), pickle.HIGHEST_PROTOCOL)
+
+pickle.dump(clf,
+    open(os.path.join(path_dest, "classifier.pkl"), "wb"), pickle.HIGHEST_PROTOCOL)
+
+print("Done!...")
