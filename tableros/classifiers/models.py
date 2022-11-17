@@ -10,8 +10,8 @@ class Movie(models.Model):
     
 class Sentiment(models.Model):
     Gender_choices =(
-        ("Masculino", "Masculino"),
-        ("Femenino", "Femenino"),
+        ("Male", "Male"),
+        ("Female", "Female"),
     )
     
     Country_choices = (
@@ -20,7 +20,7 @@ class Sentiment(models.Model):
         ("México", "México"),
         ("Europa", "Europa"),
         ("Japón", "Japón"),
-        ("Corea del Sur", "Corea del Sur")
+        ("Germany", "Germany")
     )
     
     movie     = models.ForeignKey(Movie, on_delete=models.CASCADE)
@@ -31,5 +31,8 @@ class Sentiment(models.Model):
     country   = models.CharField(max_length=24, choices=Country_choices)
     timestamp = models.DateField(auto_now_add=True)
     updated   = models.DateField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-timestamp", "-updated"]
     
     
